@@ -403,8 +403,7 @@ mask_and_filter_baits <- drake_plan (
   # Here we filter by min. number of introns > 1,
   # and choosing top five ranked by % pars. inform. characters
   final_baits_data = filter(combined_alignments_data, num_introns > 1) %>%
-    arrange(desc(pars_inf)) %>%
-    slice(1:5),
+    arrange(desc(pars_inf)),
 
   # Write out final baits
   final_baits_out = baitfindR::write_fasta_files(
