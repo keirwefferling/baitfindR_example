@@ -43,7 +43,7 @@ cheilanthoid_taxonomy <- tibble(
   ))
 
 # Set fraction for randomly downsizing transcriptomes (e.g., 0.10 = 10%)
-#keep_frac = 0.25
+keep_frac = 1
 
 # Values to use for mcl I value and Y&S hit-frac-cutoff
 my_hit_frac <- 0.4
