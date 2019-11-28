@@ -121,15 +121,17 @@ run_allbyall_blast <- drake_plan(
 # Concatenate output of single blast results
 concatenate_allbyall_blast <-
   drake_plan(
-    read_blast = readr::read_file(file_in("02_clustering/transcriptome__.allbyall.blast.outfmt6"))
+    # Establish dependency on the blast results of each transcriptome by digesting the blast output
+    read_blast = digest::digest(readr::read_file(file_in("02_clustering/transcriptome__.allbyall.blast.outfmt6")))
   ) %>%
   evaluate_plan(rules = list(transcriptome__ = codes)) %>%
   bind_plans(gather_plan(., target = "cdhitestblast_files")) %>%
   bind_plans(
     drake_plan(
-      combined_cdhitest = baitfindR::cat_files(
-        cdhitestblast_files,
-        output_file=file_out("02_clustering/all.rawblast")
+      # Combine all blast output into a single file
+      combined_cdhitest = cat_cdhitest_blast_files(
+        depends = cdhitestblast_files,
+        output_file = file_out("02_clustering/all.rawblast")
       )
     )
   )
