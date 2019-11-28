@@ -1,3 +1,11 @@
+# Functions for use in main plan ----
+
+# When run, this function will concatenate all files in 02_clustering
+# ending with 'allbyall.blast.outfmt6' into a single file called 'all.rawblast'
+cat_cdhitest_blast_files <- function (...) {
+  system("cat 02_clustering/*.allbyall.blast.outfmt6 > 02_clustering/all.rawblast")
+}
+
 # Functions for processing example data -----
 
 #' Downsize a file from the top
