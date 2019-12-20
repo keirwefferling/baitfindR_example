@@ -164,18 +164,38 @@ run_mcl <- drake_plan (
     outdir = "03_clusters",
     get_hash = TRUE,
     overwrite = TRUE
-  ),
-
-  # Align each cluster, trim alignment, and infer a tree
-  # ("basic trees" which will be further pruned downstream)
-  basic_trees = baitfindR::fasta_to_tree(
+  ), 
+  
+  # Sort clusters into subfolders
+  fasta_clusters_split = sort_clusters_into_subfolders(
+    main_dir = here("03_clusters"),
+    subfolders_dir = here("03_clusters_split"),
+    num_subfolders = n_cluster_subfolders,
     overwrite = TRUE,
-    seq_folder = "03_clusters/",
-    number_cores = 1,
-    seq_type = "dna",
-    bootstrap = FALSE,
-    get_hash = TRUE,
-    infile = fasta_clusters)
+    depends = fasta_clusters,
+  ),
+  
+  # Within each subfolder, align each cluster, trim alignment, and infer a tree
+  basic_trees_sub = target(
+    baitfindR::fasta_to_tree(
+      overwrite = TRUE,
+      seq_folder = seq_folder,
+      number_cores = 1,
+      seq_type = "dna",
+      bootstrap = FALSE,
+      get_hash = TRUE,
+      depends = fasta_clusters_split),
+    transform = map(seq_folder = !!cluster_subfolders, .id = FALSE)
+  ),
+  
+  # Copy the trees back into the main clusters folder
+  basic_trees = target(
+    aggregate_trees_in_subfolders(
+      subfolders_dir = here("03_clusters_split"),
+      main_dir = here("03_clusters"),
+      depends = basic_trees_sub),
+    transform = combine(basic_trees_sub)
+  )
 ) %>%
   evaluate_plan(rules = list("`my_hit_frac`" = my_hit_frac,
                              "`my_i_value`" = my_i_value),

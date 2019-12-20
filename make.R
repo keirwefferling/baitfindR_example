@@ -52,6 +52,10 @@ my_i_value <- 2
 # Vector of reference genomes to use for making masked blast db
 genomes <- c("arabidopsis", "azolla", "salvinia")
 
+# Set number of subfolders for splitting fasta clusters
+n_cluster_subfolders <- 1000
+cluster_subfolders <- glue::glue(here("03_clusters_split/{1:n_cluster_subfolders}"))
+
 ### Load plans
 source("R/example_data.R")
 source("R/main_plan.R")

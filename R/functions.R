@@ -6,6 +6,71 @@ cat_cdhitest_blast_files <- function (...) {
   system("cat 02_clustering/*.allbyall.blast.outfmt6 > 02_clustering/all.rawblast")
 }
 
+# Split a vector into a list of n chunks
+# Helper function for sort_clusters_into_subfolders.
+# 144k views on SO and counting
+# https://stackoverflow.com/questions/3318333/split-a-vector-into-chunks-in-r
+chunk2 <- function(x,n) split(x, cut(seq_along(x), n, labels = FALSE))
+
+# Given a large number of clusters (fasta files) in `main_dir`,
+# copy them into subfolders within in `subfolders_dir`. Set the number
+# subfolders with `num_subfolders`. If `overwrite` is set to TRUE, ALL content
+# in `subfolders_dir` will be erased first.
+sort_clusters_into_subfolders <- function (main_dir, subfolders_dir, num_subfolders, overwrite = FALSE, ...) {
+  
+  assertthat::assert_that(assertthat::is.dir(main_dir))
+  
+  assertthat::assert_that(assertthat::is.dir(subfolders_dir))
+  
+  assertthat::assert_that(assertthat::is.number(num_subfolders))
+  
+  assertthat::assert_that(is.logical(overwrite))
+  
+  # Delete old output if overwrite is TRUE
+  old_output <- list.files(subfolders_dir)
+  if(isTRUE(overwrite) & length(old_output) > 0) {
+    fs::dir_delete(subfolders_dir)
+    fs::dir_create(subfolders_dir)
+  }
+  
+  # Create subfolders in specified directory
+  fs::dir_create(fs::path(subfolders_dir, 1:num_subfolders))
+  
+  # Get list of fasta files in main directory, split into groups
+  fastas_to_copy <- list.files(main_dir, pattern = "*.fa$", full.names = TRUE) %>%
+    chunk2(num_subfolders)
+  
+  # Copy fastas into subfolders
+  
+  purrr::walk2(
+    fastas_to_copy, 1:num_subfolders,
+    ~fs::file_copy(.x, fs::path(subfolders_dir, .y), overwrite = TRUE)
+  )
+  
+  # Return info about the subfolders directory for tracking
+  fs::dir_info(subfolders_dir)
+  
+}
+
+# Copy all of the files in subfolders to a single main folder.
+# `subfolders_dir` contains all the subfolders.
+aggregate_files_in_subfolders <- function (subfolders_dir, main_dir, ...) {
+  
+  assertthat::assert_that(assertthat::is.dir(main_dir))
+  
+  assertthat::assert_that(assertthat::is.dir(subfolders_dir))
+  
+  files_to_copy <- list.files(subfolders_dir, recursive = TRUE, full.names = TRUE)
+  
+  purrr::walk(
+    files_to_copy,
+    ~fs::file_copy(., main_dir, overwrite = TRUE)
+  )
+  
+  # Return info about the main_dir for tracking
+  fs::dir_info(main_dir)
+}
+
 # Functions for processing example data -----
 
 #' Downsize a file from the top
