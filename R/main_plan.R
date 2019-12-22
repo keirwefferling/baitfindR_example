@@ -227,7 +227,7 @@ sort_homologs_orthologs <- drake_plan(
     tree_folder = "03_clusters/",
     tree_file_ending = ".mm",
     internal_branch_length_cutoff = 0.3,
-    minimal_taxa = 4,
+    minimal_taxa = 10,
     outdir = "04_homologs/",
     depends = masked_trees),
 
