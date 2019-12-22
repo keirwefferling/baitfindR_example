@@ -160,7 +160,7 @@ run_mcl <- drake_plan (
   fasta_clusters = baitfindR::write_fasta_files_from_mcl(
     all_fasta = file_in("02_clustering/all_orfs.fa"),
     mcl_outfile = file_in("02_clustering/hit-frac`my_hit_frac`_I`my_i_value`_e5"),
-    minimal_taxa = 4,
+    minimal_taxa = 10,
     outdir = "03_clusters",
     get_hash = TRUE,
     overwrite = TRUE
@@ -227,7 +227,7 @@ sort_homologs_orthologs <- drake_plan(
     tree_folder = "03_clusters/",
     tree_file_ending = ".mm",
     internal_branch_length_cutoff = 0.3,
-    minimal_taxa = 10,
+    minimal_taxa = 4,
     outdir = "04_homologs/",
     depends = masked_trees),
 
