@@ -14,6 +14,7 @@ tmp/
 01_translation/
 02_clustering/
 03_clusters/
+03_clusters_split/
 04_homologs/
 05_orthologs/
 06_intron_masking/
