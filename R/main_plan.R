@@ -190,7 +190,7 @@ run_mcl <- drake_plan (
   
   # Copy the trees back into the main clusters folder
   basic_trees = target(
-    aggregate_trees_in_subfolders(
+    aggregate_files_in_subfolders(
       subfolders_dir = here("03_clusters_split"),
       main_dir = here("03_clusters"),
       depends = basic_trees_sub),
