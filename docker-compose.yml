@@ -1,7 +1,7 @@
 version: "3"
 services:
   drake:
-    image: joelnitta/baitfindr
+    image: joelnitta/baitfindr:0.2
     ports:
       - "8787:8787"
     volumes:
