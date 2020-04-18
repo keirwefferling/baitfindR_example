@@ -351,7 +351,7 @@ mask_and_filter_baits <- drake_plan (
     depends2 = ortholog_fasta),
 
   # Write out unaligned, family-filtered baits
-  family_filtered_baits_out = baitfindR::write_fasta_files(
+  family_filtered_baits_out = write_fasta_files_chunked(
     fasta_list = family_filtered_baits,
     out_dir = "06_intron_masking/taxonomy_filtered"),
 

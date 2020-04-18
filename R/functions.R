@@ -177,3 +177,25 @@ rename_arabidopsis_genome <- function (fasta_in, fasta_out, ...) {
   
   write.FASTA(arabidopsis_genome, fasta_out)
 }
+
+#' Write out a list of DNA sequences in chunks
+#' 
+#' The list will be split into a list of lists, to
+#' save memory when writing out sequences.
+#'
+#' @param fasta_list The list of DNA sequences
+#' @param chunk_size Size of chunks to split up list into.
+#' @param out_dir Directory to write to
+#'
+#' @return List of hashes; digest of each chunk. Externally, the 
+#' sequences will be written to out_dir
+#' 
+write_fasta_files_chunked <- function(fasta_list, chunk_size = 100, out_dir) {
+# Split list of fasta files to write out into chunks
+n <- length(fasta_list)
+r <- rep(1:ceiling(n/chunk_size), each=chunk_size)[1:n]
+fasta_list_split <- split(fasta_list, r)
+
+# Write out in chunks
+purrr::map(fasta_list_split, ~baitfindR::write_fasta_files(., out_dir = out_dir))
+}
