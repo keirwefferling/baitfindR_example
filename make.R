@@ -61,7 +61,7 @@ source("R/example_data.R")
 source("R/main_plan.R")
 
 ### Download and pre-process example data
-make(example_data_plan)
+# make(example_data_plan)
 
 ### Run analyses
 #
