@@ -178,6 +178,8 @@ rename_arabidopsis_genome <- function (fasta_in, fasta_out, ...) {
   write.FASTA(arabidopsis_genome, fasta_out)
 }
 
+# Additional functions ----
+
 #' Write out a list of DNA sequences in chunks
 #' 
 #' The list will be split into a list of lists, to
@@ -198,4 +200,86 @@ fasta_list_split <- split(fasta_list, r)
 
 # Write out in chunks
 purrr::map(fasta_list_split, ~baitfindR::write_fasta_files(., out_dir = out_dir))
+}
+
+#' Helper function to subset an alignment
+#'
+#' The alignment will be subset to the bases between the start 
+#' and stop positions, inclusive
+#'
+#' @param alignment Object of class "DNAbin"; input alignment
+#' @param start Integer; start position
+#' @param stop Integer; stop position
+#'
+#' @return Object of class "DNAbin"; subset alignment
+#' 
+subset_alignment <- function (alignment, start, stop) {
+  assertthat::assert_that(assertthat::is.number(start))
+  assertthat::assert_that(assertthat::is.number(stop))
+  assertthat::assert_that(is.matrix(alignment))
+  assertthat::assert_that(inherits(alignment, "DNAbin"))
+  assertthat::assert_that(start <= stop)
+  assertthat::assert_that(stop >= start)
+  assertthat::assert_that(start >= 1)
+  assertthat::assert_that(stop <= ncol(alignment))
+  
+  alignment[,start:stop]
+}
+
+#' Extract exons from an alignment
+#' 
+#' Introns are assumed to be coded as "n" for all sequences at a given site.
+#'
+#' @param alignment 
+#'
+#' @return Dataframe with exons as a list-column
+#' 
+extract_exons <- function (alignment) {
+  # Get the column positions of all exons
+  exon_cols <- apply(as.character(alignment), 2, function(x) all(x =="n")) %>%
+    magrittr::not %>%
+    which
+  
+  tibble(exon_cols = exon_cols) %>%
+    # Group the exons by consecutive column positions
+    mutate(exon = cumsum(c(1, diff(exon_cols) != 1))) %>%
+    group_by(exon) %>%
+    # Find the start and stop of each exon
+    summarize(
+      exon_start = min(exon_cols),
+      exon_stop = max(exon_cols)
+    ) %>%
+    ungroup %>%
+    # Extract each exon from the alignment
+    mutate(exon_alignment = map2(.x = exon_start, .y = exon_stop, ~subset_alignment(alignment, .x, .y))) %>%
+    select(exon, exon_alignment)
+}
+
+#' Convert a dataframe of combined alignments to exons
+#'
+#' @param combined_alignments_data Dataframe; candidate baits (alignments),
+#' with columns `bait_id` and `alignment`. Each row is one gene, including
+#' both introns and exons (introns are regions where all sequences are "n").
+#'
+#' @return Dataframe, with each row an exon from the input alignments.
+#' 
+combined_alignments_to_exons <- function (combined_alignments_data) {
+  
+  combined_alignments_data %>%
+    # Extract exons from each alignment
+    select(bait_id, alignment) %>%
+    mutate(exons = map(alignment, extract_exons)) %>%
+    select(bait_id, exons) %>%
+    # Now "alignment" referers to each exon
+    unnest(exons) %>%
+    rename(alignment = exon_alignment) %>%
+    # Calculate summary stats for each exon
+    mutate(
+      length = purrr::map_dbl(alignment, ncol),
+      ntaxa = purrr::map_dbl(alignment, nrow),
+      GC_content = purrr::map_dbl(alignment, GC.content),
+      mean_dist = purrr::map_dbl(alignment, ~ape::dist.dna(., model = "raw", pairwise.deletion = TRUE) %>% mean(na.rm = TRUE)),
+      max_dist = purrr::map_dbl(alignment, ~ape::dist.dna(., model = "raw", pairwise.deletion = TRUE) %>% max(na.rm = TRUE)),
+      pars_inf = purrr::map_dbl(alignment, ~ips::pis(., "fraction")))
+  
 }

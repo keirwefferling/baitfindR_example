@@ -420,6 +420,9 @@ mask_and_filter_baits <- drake_plan (
     baitfindR::calculate_alignment_stats,
     include_aln = TRUE,
     .id = "bait_id"),
+  
+  # Calculate summary statistics for exons
+  combined_exons_data = combined_alignments_to_exons(combined_alignments_data),
 
   # Filter alignments to get final baits
   # Here we filter by min. number of introns > 1,
