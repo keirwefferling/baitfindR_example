@@ -422,20 +422,20 @@ mask_and_filter_baits <- drake_plan (
     .id = "bait_id"),
   
   # Calculate summary statistics for exons
-  combined_exons_data = combined_alignments_to_exons(combined_alignments_data),
+  combined_exons_data = combined_alignments_to_exons(combined_alignments_data) # ,
 
   # Filter alignments to get final baits
   # Here we filter by min. number of introns > 1,
   # and choosing top five ranked by % pars. inform. characters
-  final_baits_data = filter(combined_alignments_data, num_introns > 1) %>%
-    arrange(desc(pars_inf)),
+  # final_baits_data = filter(combined_alignments_data, num_introns > 1) %>%
+  #   arrange(desc(pars_inf)),
 
   # Write out final baits
-  final_baits_out = baitfindR::write_fasta_files(
-    fasta_list = final_baits_data$alignment,
-    fasta_names = final_baits_data$bait_id,
-    ext = "fasta",
-    out_dir = "07_baits")
+  # final_baits_out = baitfindR::write_fasta_files(
+  #   fasta_list = final_baits_data$alignment,
+  #   fasta_names = final_baits_data$bait_id,
+  #   ext = "fasta",
+  #   out_dir = "07_baits")
 
 )
 
@@ -458,8 +458,9 @@ main_plan <- bind_plans(
   mask_genes,
   concatenate_masked_genes,
   make_masked_genes_blast_db,
-  mask_and_filter_baits,
-  write_report)
+  mask_and_filter_baits #,
+  # write_report
+  )
 
 rm(build_blastp_db,
    run_transdecoder,
