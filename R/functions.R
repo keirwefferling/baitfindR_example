@@ -237,7 +237,7 @@ subset_alignment <- function (alignment, start, stop) {
 extract_exons <- function (alignment) {
   # Get the column positions of all exons
   exon_cols <- apply(as.character(alignment), 2, function(x) all(x =="n")) %>%
-    magrittr::not %>%
+    magrittr::not() %>%
     which
   
   tibble(exon_cols = exon_cols) %>%
