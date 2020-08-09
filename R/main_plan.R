@@ -409,9 +409,7 @@ mask_and_filter_baits <- drake_plan (
     combined_alignments,
     ~ baitfindR::fill_introns(
       .,
-      ref_pattern = "Sacu|Azfi|1|2|3|4|5",
-      outgroup = outgroup,
-      trim_outgroup = TRUE)
+      ref_pattern = "Sacu|Azfi|1|2|3|4|5")
   ),
 
   # Calculate summary statistics for alignments

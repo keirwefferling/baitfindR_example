@@ -28,19 +28,12 @@ set.seed(5394)
 # Vector of transcriptome samples. These are all cheilanthoid ferns.
 codes <- c("ACAS", "ADCA", "ADCS", "ADJO", "ALCS", "ANSS", "BOHS", "CHCS", "COFS", "GAAG", "HAAS", "HAHE", "POPJ", "SKYV", "UJTT", "WQML", "YCKE", "ACSS", "ADCF", "ADHI", "ADMA", "ANCS", "ASCG", "CERI", "CHNI", "FLTD", "GSXD", "HAES", "ONJA", "PTSG", "TABS", "VATS", "XDDT", "ZXJO")
 
-# Specify outgroup
-outgroup <- "ADCA"
-
 # Specify taxonomy table to use for filtering
 cheilanthoid_taxonomy <- tibble(
   code = codes,
   group = rep("in", length(codes)),
   family = rep("pteridaceae", length(codes))
-) %>%
-  mutate(group = case_when(
-    code == "ADCA" ~ "out",
-    TRUE ~ "in"
-  ))
+)
 
 # Set fraction for randomly downsizing transcriptomes (e.g., 0.10 = 10%)
 keep_frac = 1
