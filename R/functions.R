@@ -283,3 +283,108 @@ combined_alignments_to_exons <- function (combined_alignments_data) {
       pars_inf = purrr::map_dbl(alignment, ~ips::pis(., "fraction")))
   
 }
+
+#' Calculate base frequences *per sample* in an alignment
+#'
+#' @param align DNA alignment (list of class "DNAbin")
+#'
+#' @return Tibble with frequencies of each base as columns and samples as rows
+base_freq_per_taxon <- function (align) {
+  
+  purrr::map_df(
+    1:nrow(align), 
+    ~ape::base.freq(align[.,], freq = TRUE, all = TRUE) %>% 
+      dplyr::bind_rows()) %>%
+    dplyr::rename(gap = `-`, missing = `?`) %>%
+    dplyr::mutate(sample = rownames(align))
+}
+
+#' Exclude empty sequences from an alignment
+#' 
+#' (Empty sequences are those with zero A, C, T, or G)
+#'
+#' @param align DNA alignment (list of class "DNAbin")
+#'
+#' @return DNA alignment (list of class "DNAbin") with empty sequences removed
+#' 
+exclude_empty_taxa <- function (align) {
+  
+  to_keep <- 
+    # Calculate base frequences for each sample (row of alignment)
+    base_freq_per_taxon(align) %>%
+    # Exclude sample if frequences of all actg bases are zero
+    dplyr::mutate(to_exclude = ifelse(a == 0 & c == 0 & g == 0 & t == 0, TRUE, FALSE)) %>%
+    dplyr::filter(to_exclude == FALSE) %>%
+    dplyr::pull(sample)
+  
+  # Subset to only samples flagged to keep
+  align[rownames(align) %in% to_keep,]
+  
+}
+
+#' Filter a set of exons to a bait set of a specified size
+#' 
+#' After filtering by `min_exon_length`, `max_exon_length`, `min_gc`, `max_gc` and `min_ntaxa`,
+#' exons will be arranged in decreasing order of parsimony informativeness (PI), and
+#' one exon per gene with the greatest PI will be selected. The cumulative number of
+#' baits will then be calculated, and the final set of baits truncated so it does not
+#' exceed `bait_kit_size`.
+#'
+#' @param exon_alignments Dataframe; exons in a tibble. Output of combined_alignments_to_exons()
+#' @param bait_length Length of the synthesized baits in bp (typically 105 or 120)
+#' @param bait_coverage Mean depth of tiled baits (typically in the range of 1-3)
+#' @param bait_kit_size Total number of baits in the kit (typically in the range of 20000-60000)
+#' @param min_exon_length Minimum length of exons to include in the baits; 
+#' exons shorter than this will be excluded
+#' @param max_exon_length Maximum length of exons to include in the baits; 
+#' exons longer than this will be excluded
+#' @param min_gc Minimum GC content allowed to include in the baits; 
+#' exons with lower % GC than this will be excluded
+#' @param max_gc Maximum GC content allowed to include in the baits; 
+#' exons with higher % GC than this will be excluded
+#' @param min_ntaxa Minimum number of taxa required in each exon alignment to be included in the baits;
+#' exon alignments with fewer taxa will be excluded
+#'
+#' @return Tibble
+#' 
+filter_baits <- function(
+  exon_alignments, 
+  bait_length = 105, 
+  bait_coverage = 2.5, 
+  bait_kit_size = 20000,
+  min_exon_length = 120,
+  max_exon_length = 300,
+  min_gc = 0.25,
+  max_gc = 0.55,
+  min_ntaxa) {
+  
+  exon_alignments %>%
+    # Filter exon alignments by length, number of taxa, and GC content
+    dplyr::filter(
+      length > min_exon_length, 
+      length < max_exon_length, 
+      GC_content > min_gc,
+      GC_content < max_gc,
+      ntaxa > min_ntaxa) %>%
+    # Select one exon per gene with the greatest pars. inform.
+    dplyr::group_by(bait_id) %>%
+    dplyr::arrange(dplyr::desc(pars_inf)) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    # Arrange by descending parsimony informativeness
+    dplyr::arrange(dplyr::desc(pars_inf)) %>%
+    # Calculate number of baits required
+    dplyr::mutate(
+      # - Calculate total number of non-missing bases in each alignment
+      total_bp = purrr::map_dbl(alignment, ~ape::base.freq(x = ., all = FALSE, freq = TRUE) %>% sum),
+      # - Calculate the number of baits needed to cover each alignment
+      num_baits = (total_bp / bait_length) * bait_coverage,
+      # - Calculate running total of the number of baits needed as the number of 
+      # included exons increases
+      num_baits_cum = cumsum(num_baits)
+    ) %>%
+    # Cap the number of baits so it does not exceed the bait kit size
+    dplyr::filter(num_baits_cum < bait_kit_size) %>%
+    dplyr::select(-num_baits_cum)
+}
+
