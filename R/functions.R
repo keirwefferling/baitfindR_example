@@ -273,6 +273,8 @@ combined_alignments_to_exons <- function (combined_alignments_data) {
     # Now "alignment" referers to each exon
     unnest(exons) %>%
     rename(alignment = exon_alignment) %>%
+    # Remove empty sequences from alignments
+    mutate(alignment = map(alignment, exclude_empty_taxa)) %>%
     # Calculate summary stats for each exon
     mutate(
       length = purrr::map_dbl(alignment, ncol),
