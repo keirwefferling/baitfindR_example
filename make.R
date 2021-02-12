@@ -47,7 +47,7 @@ genomes <- c("arabidopsis", "azolla", "salvinia")
 
 # Set number of subfolders for splitting fasta clusters
 n_cluster_subfolders <- 1000
-cluster_subfolders <- glue::glue(here("03_clusters_split/{1:n_cluster_subfolders}"))
+cluster_subfolders <- glue::glue("03_clusters_split/{1:n_cluster_subfolders}")
 
 ### Load plans
 source("R/example_data.R")
@@ -63,5 +63,5 @@ source("R/main_plan.R")
 #
 # Check the number of cores available with this command:
 # future::availableCores()
-
-make(main_plan, jobs = 4)
+future::plan(future::multiprocess)
+make(main_plan, parallelism = "future", jobs = 32)

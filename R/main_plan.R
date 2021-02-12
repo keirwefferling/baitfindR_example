@@ -168,8 +168,8 @@ run_mcl <- drake_plan (
   
   # Sort clusters into subfolders
   fasta_clusters_split = sort_clusters_into_subfolders(
-    main_dir = here("03_clusters"),
-    subfolders_dir = here("03_clusters_split"),
+    main_dir = "03_clusters",
+    subfolders_dir = "03_clusters_split",
     num_subfolders = n_cluster_subfolders,
     overwrite = TRUE,
     depends = fasta_clusters,
@@ -191,8 +191,8 @@ run_mcl <- drake_plan (
   # Copy the trees back into the main clusters folder
   basic_trees = target(
     aggregate_files_in_subfolders(
-      subfolders_dir = here("03_clusters_split"),
-      main_dir = here("03_clusters"),
+      subfolders_dir = "03_clusters_split",
+      main_dir = "03_clusters",
       depends = basic_trees_sub),
     transform = combine(basic_trees_sub)
   )
