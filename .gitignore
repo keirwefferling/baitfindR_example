@@ -31,3 +31,4 @@ tmp/
 !06_intron_masking/blast_filtered/.keep
 !07_baits/.keep
 *.swp
+logs
