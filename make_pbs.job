@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=32
+#PBS -l walltime=10:00:00:00
+#PBS -p 0
+#PBS -N make
+#PBS -j oe
+#PBS -m abe 
+#PBS -M joelnitta@gmail.com
+#PBS -V
+cd ftol
+### mount ~ so symlinks to ~/project_data work
+docker run --rm -v ~/:/home/rstudio/ -w /home/rstudio/baitfindR_example -e DISABLE_AUTH=true joelnitta/baitfindr:0.3 Rscript make.R
